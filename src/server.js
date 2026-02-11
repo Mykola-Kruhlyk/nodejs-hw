@@ -1,53 +1,18 @@
 import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
-
-
-import notesRoutes from './routes/notesRoutes.js';
 import {
-    logger
-} from "./middleware/logger.js";
-import {
-    notFoundHandler
-} from "./middleware/notFoundHandler.js";
-import {
-    errorHandler
-} from "./middleware/errorHandler.js";
-import {
-    connectMongoDB
-} from './db/connectMongoDB.js';
+  getAllNotes,
+  getNoteById,
+  createNote,
+  deleteNote,
+  updateNote,
+} from '../controllers/notesController.js';
 
+const router = express.Router();
 
-const PORT = Number(process.env.PORT) || 3000;
-const app = express();
+router.get('/', getAllNotes);
+router.get('/:noteId', getNoteById);
+router.post('/', createNote);
+router.patch('/:noteId', updateNote);
+router.delete('/:noteId', deleteNote);
 
-
-app.use(logger);
-app.use(cors());
-app.use(
-    express.json({
-        type: ['application/json', 'application/vnd.api+json'],
-        limit: '1mb',
-    })
-);
-
-
-app.use(notesRoutes);
-
-
-app.use(notFoundHandler);
-app.use(errorHandler);
-
-const startServer = async () => {
-    try {
-        await connectMongoDB();
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    } catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-    }
-};
-
-startServer();
+export default router;
