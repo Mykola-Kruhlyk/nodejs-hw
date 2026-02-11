@@ -1,42 +1,18 @@
+import { Router } from 'express';
 import {
-    Schema,
-    model
-} from "mongoose";
+  getAllNotes,
+  getNoteById,
+  createNote,
+  deleteNote,
+  updateNote,
+} from '../controllers/notesController.js';
 
-const noteSchema = new Schema({
-    title: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    content: {
-        type: String,
-        required: false,
-        default: "",
-        trim: true,
-    },
-    tag: {
-        type: String,
-        required: false,
-        default: "Todo",
-        enum: [
-            "Work",
-            "Personal",
-            "Shopping",
-            "Meeting",
-            "Ideas",
-            "Travel",
-            "Finance",
-            "Health",
-            "Important",
-            "Todo",
-        ],
-    },
-}, {
-    timestamps: true,
-    versionKey: false
-});
+const router = Router();
 
-const Note = model("Note", noteSchema);
+router.get('/', getAllNotes);
+router.get('/:noteId', getNoteById);
+router.post('/', createNote);
+router.patch('/:noteId', updateNote);
+router.delete('/:noteId', deleteNote);
 
-export default Note;
+export default router;
