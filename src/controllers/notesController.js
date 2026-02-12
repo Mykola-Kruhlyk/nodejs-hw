@@ -1,9 +1,48 @@
-import Note from "../models/note.js";
-import createError from "http-errors";
+import {
+    Note
+} from "../models/note.js";
+import createHttpError from "http-errors";
 
 export const getAllNotes = async (req, res) => {
-    const notes = await Note.find();
-    res.status(200).json(notes);
+    const {
+        page = 1, perPage = 10, tag, search
+    } = req.query;
+
+    const skip = (page - 1) * perPage;
+
+    const notesQuery = Note.find();
+
+    if (tag) {
+        notesQuery.where("tag").equals(tag);
+    }
+
+    if (search) {
+        notesQuery.where({
+            $text: {
+                $search: search
+            }
+        });
+    }
+
+    const [totalNotes, notes] = await Promise.all([
+        Note.countDocuments(notesQuery.getFilter()),
+        notesQuery
+        .sort({
+            createdAt: -1
+        })
+        .skip(skip)
+        .limit(Number(perPage)),
+    ]);
+
+    const totalPages = Math.ceil(totalNotes / perPage);
+
+    res.status(200).json({
+        page: Number(page),
+        perPage: Number(perPage),
+        totalNotes,
+        totalPages,
+        notes,
+    });
 };
 
 export const getNoteById = async (req, res, next) => {
@@ -13,7 +52,7 @@ export const getNoteById = async (req, res, next) => {
     const note = await Note.findById(noteId);
 
     if (!note) {
-        throw createError(404, 'Note not found');
+        throw createHttpError(404, "Note not found");
     }
 
     res.status(200).json(note);
@@ -33,7 +72,7 @@ export const deleteNote = async (req, res, next) => {
     });
 
     if (!note) {
-        throw createError(404, "Note not found");
+        throw createHttpError(404, "Note not found");
     }
 
     res.status(200).json(note);
@@ -45,15 +84,15 @@ export const updateNote = async (req, res, next) => {
     } = req.params;
 
     const note = await Note.findOneAndUpdate({
-            _id: noteId
+            _id: noteId,
         },
         req.body, {
-            new: true
-        },
+            new: true,
+        }
     );
 
     if (!note) {
-        throw createError(404, 'Note not found');
+        throw createHttpError(404, "Note not found");
     }
 
     res.status(200).json(note);
